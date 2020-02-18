@@ -5,11 +5,14 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
+ * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
-class User
+class User implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -19,24 +22,9 @@ class User
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=250)
-     */
-    private $username;
-
-    /**
-     * @ORM\Column(type="string", length=250)
+     * @ORM\Column(type="string", length=180, unique=true)
      */
     private $email;
-
-    /**
-     * @ORM\Column(type="string", length=250)
-     */
-    private $password;
-
-    /**
-     * @ORM\Column(type="string", length=250, nullable=true)
-     */
-    private $avatar_src;
 
     /**
      * @ORM\Column(type="json")
@@ -44,58 +32,30 @@ class User
     private $roles = [];
 
     /**
-     * @ORM\Column(type="boolean")
+     * @var string The hashed password
+     * @ORM\Column(type="string")
      */
-    private $isActive;
+    private $password;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Groups", mappedBy="group_owner", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\Friendship", mappedBy="user")
      */
-    private $myGroups;
+    private $friendships;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Message", mappedBy="user_to", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\Friendship", mappedBy="friend")
      */
-    private $messages;
-
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Groups", mappedBy="users_inside")
-     */
-    private $groups_in;
-
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Friendships", mappedBy="user_id", orphanRemoval=true)
-     */
-    private $myFriendships;
-
-    /**
-     * @ORM\OneToOne(targetEntity="App\Entity\Friendships", mappedBy="friend_id", cascade={"persist", "remove"})
-     */
-    private $friendsWithMe;
+    private $friendswithme;
 
     public function __construct()
     {
-        $this->myGroups = new ArrayCollection();
-        $this->messages = new ArrayCollection();
-        $this->groups_in = new ArrayCollection();
-        $this->myFriendships = new ArrayCollection();
+        $this->friendships = new ArrayCollection();
+        $this->friendswithme = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getUsername(): ?string
-    {
-        return $this->username;
-    }
-
-    public function setUsername(string $username): self
-    {
-        $this->username = $username;
-
-        return $this;
     }
 
     public function getEmail(): ?string
@@ -110,33 +70,26 @@ class User
         return $this;
     }
 
-    public function getPassword(): ?string
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUsername(): string
     {
-        return $this->password;
+        return (string) $this->email;
     }
 
-    public function setPassword(string $password): self
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
     {
-        $this->password = $password;
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
 
-        return $this;
-    }
-
-    public function getAvatarSrc(): ?string
-    {
-        return $this->avatar_src;
-    }
-
-    public function setAvatarSrc(?string $avatar_src): self
-    {
-        $this->avatar_src = $avatar_src;
-
-        return $this;
-    }
-
-    public function getRoles(): ?array
-    {
-        return $this->roles;
+        return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
@@ -146,43 +99,63 @@ class User
         return $this;
     }
 
-    public function getIsActive(): ?bool
+    /**
+     * @see UserInterface
+     */
+    public function getPassword(): string
     {
-        return $this->isActive;
+        return (string) $this->password;
     }
 
-    public function setIsActive(bool $isActive): self
+    public function setPassword(string $password): self
     {
-        $this->isActive = $isActive;
+        $this->password = $password;
 
         return $this;
     }
 
     /**
-     * @return Collection|Groups[]
+     * @see UserInterface
      */
-    public function getMyGroups(): Collection
+    public function getSalt()
     {
-        return $this->myGroups;
+        // not needed when using the "bcrypt" algorithm in security.yaml
     }
 
-    public function addMyGroup(Groups $myGroup): self
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
     {
-        if (!$this->myGroups->contains($myGroup)) {
-            $this->myGroups[] = $myGroup;
-            $myGroup->setGroupOwner($this);
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection|Friendship[]
+     */
+    public function getFriendships(): Collection
+    {
+        return $this->friendships;
+    }
+
+    public function addFriendship(Friendship $friendship): self
+    {
+        if (!$this->friendships->contains($friendship)) {
+            $this->friendships[] = $friendship;
+            $friendship->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeMyGroup(Groups $myGroup): self
+    public function removeFriendship(Friendship $friendship): self
     {
-        if ($this->myGroups->contains($myGroup)) {
-            $this->myGroups->removeElement($myGroup);
+        if ($this->friendships->contains($friendship)) {
+            $this->friendships->removeElement($friendship);
             // set the owning side to null (unless already changed)
-            if ($myGroup->getGroupOwner() === $this) {
-                $myGroup->setGroupOwner(null);
+            if ($friendship->getUser() === $this) {
+                $friendship->setUser(null);
             }
         }
 
@@ -190,110 +163,31 @@ class User
     }
 
     /**
-     * @return Collection|Message[]
+     * @return Collection|Friendship[]
      */
-    public function getMessages(): Collection
+    public function getFriendswithme(): Collection
     {
-        return $this->messages;
+        return $this->friendswithme;
     }
 
-    public function addMessage(Message $message): self
+    public function addFriendswithme(Friendship $friendswithme): self
     {
-        if (!$this->messages->contains($message)) {
-            $this->messages[] = $message;
-            $message->setUserTo($this);
+        if (!$this->friendswithme->contains($friendswithme)) {
+            $this->friendswithme[] = $friendswithme;
+            $friendswithme->setFriend($this);
         }
 
         return $this;
     }
 
-    public function removeMessage(Message $message): self
+    public function removeFriendswithme(Friendship $friendswithme): self
     {
-        if ($this->messages->contains($message)) {
-            $this->messages->removeElement($message);
+        if ($this->friendswithme->contains($friendswithme)) {
+            $this->friendswithme->removeElement($friendswithme);
             // set the owning side to null (unless already changed)
-            if ($message->getUserTo() === $this) {
-                $message->setUserTo(null);
+            if ($friendswithme->getFriend() === $this) {
+                $friendswithme->setFriend(null);
             }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Groups[]
-     */
-    public function getGroupsIn(): Collection
-    {
-        return $this->groups_in;
-    }
-
-    public function addGroupsIn(Groups $groupsIn): self
-    {
-        if (!$this->groups_in->contains($groupsIn)) {
-            $this->groups_in[] = $groupsIn;
-            $groupsIn->setUsersInside($this);
-        }
-
-        return $this;
-    }
-
-    public function removeGroupsIn(Groups $groupsIn): self
-    {
-        if ($this->groups_in->contains($groupsIn)) {
-            $this->groups_in->removeElement($groupsIn);
-            // set the owning side to null (unless already changed)
-            if ($groupsIn->getUsersInside() === $this) {
-                $groupsIn->setUsersInside(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Friendships[]
-     */
-    public function getMyFriendships(): Collection
-    {
-        return $this->myFriendships;
-    }
-
-    public function addMyFriendship(Friendships $myFriendship): self
-    {
-        if (!$this->myFriendships->contains($myFriendship)) {
-            $this->myFriendships[] = $myFriendship;
-            $myFriendship->setUserId($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMyFriendship(Friendships $myFriendship): self
-    {
-        if ($this->myFriendships->contains($myFriendship)) {
-            $this->myFriendships->removeElement($myFriendship);
-            // set the owning side to null (unless already changed)
-            if ($myFriendship->getUserId() === $this) {
-                $myFriendship->setUserId(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getFriendsWithMe(): ?Friendships
-    {
-        return $this->friendsWithMe;
-    }
-
-    public function setFriendsWithMe(Friendships $friendsWithMe): self
-    {
-        $this->friendsWithMe = $friendsWithMe;
-
-        // set the owning side of the relation if necessary
-        if ($friendsWithMe->getFriendId() !== $this) {
-            $friendsWithMe->setFriendId($this);
         }
 
         return $this;
