@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Header{% endblock %}
+
+{% block body %}
+    <h1>Header</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ header.id }}</td>
+            </tr>
+            <tr>
+                <th>Old</th>
+                <td>{{ header.old ? 'Yes' : 'No' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('header_index') }}">back to list</a>
+
+    <a href="{{ path('header_edit', {'id': header.id}) }}">edit</a>
+
+    {{ include('header/_delete_form.html.twig') }}
+{% endblock %}
