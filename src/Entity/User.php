@@ -47,10 +47,39 @@ class User implements UserInterface
      */
     private $friendswithme;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Group", mappedBy="owner", orphanRemoval=true)
+     */
+    private $mygroups;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Group", inversedBy="users")
+     */
+    private $groupsin;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Header", mappedBy="user_to", orphanRemoval=true)
+     */
+    private $headers;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $username;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $avatar_src = 'default.png';
+
+
     public function __construct()
     {
         $this->friendships = new ArrayCollection();
         $this->friendswithme = new ArrayCollection();
+        $this->mygroups = new ArrayCollection();
+        $this->groupsin = new ArrayCollection();
+        $this->headers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -192,4 +221,112 @@ class User implements UserInterface
 
         return $this;
     }
+
+    /**
+     * @return Collection|Group[]
+     */
+    public function getMygroups(): Collection
+    {
+        return $this->mygroups;
+    }
+
+    public function addMygroup(Group $mygroup): self
+    {
+        if (!$this->mygroups->contains($mygroup)) {
+            $this->mygroups[] = $mygroup;
+            $mygroup->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMygroup(Group $mygroup): self
+    {
+        if ($this->mygroups->contains($mygroup)) {
+            $this->mygroups->removeElement($mygroup);
+            // set the owning side to null (unless already changed)
+            if ($mygroup->getOwner() === $this) {
+                $mygroup->setOwner(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Group[]
+     */
+    public function getGroupsin(): Collection
+    {
+        return $this->groupsin;
+    }
+
+    public function addGroupsin(Group $groupsin): self
+    {
+        if (!$this->groupsin->contains($groupsin)) {
+            $this->groupsin[] = $groupsin;
+        }
+
+        return $this;
+    }
+
+    public function removeGroupsin(Group $groupsin): self
+    {
+        if ($this->groupsin->contains($groupsin)) {
+            $this->groupsin->removeElement($groupsin);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Header[]
+     */
+    public function getHeaders(): Collection
+    {
+        return $this->headers;
+    }
+
+    public function addHeader(Header $header): self
+    {
+        if (!$this->headers->contains($header)) {
+            $this->headers[] = $header;
+            $header->setUserTo($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHeader(Header $header): self
+    {
+        if ($this->headers->contains($header)) {
+            $this->headers->removeElement($header);
+            // set the owning side to null (unless already changed)
+            if ($header->getUserTo() === $this) {
+                $header->setUserTo(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    public function getAvatarSrc(): ?string
+    {
+        return $this->avatar_src;
+    }
+
+    public function setAvatarSrc(string $avatar_src): self
+    {
+        $this->avatar_src = $avatar_src;
+
+        return $this;
+    }
+
 }
