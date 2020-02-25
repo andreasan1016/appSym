@@ -15,8 +15,11 @@ class HeaderType extends AbstractType
     {
         $builder
             ->add('old')
-            ->add('to', ChoiceType::class,
-                ['choices' => ['1' =>'1'], ['2' =>'2'], ])
+           /* ->add("user_to", ChoiceType::class,[
+                'choices'=>[
+                    'user1' => 'user1',
+                ],
+            ])*/
             //->add('message', null)
         ;
     }
