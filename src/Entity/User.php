@@ -165,7 +165,7 @@ class User implements UserInterface
      */
     public function getFriendships(): Collection
     {
-        return array_merge($this->friendships,$this->friendswithme);
+        return new ArrayCollection (array_merge($this->friendships->toArray(),$this->friendswithme->toArray()));
      }
 
     public function addFriendship(Friendship $friendship): self
