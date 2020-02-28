@@ -221,7 +221,47 @@ class User implements UserInterface
 
         return $this;
     }
+    /**
+     * @return Collection|User[]
+     */
+    public function getAllFriends(){
+        $papa = new ArrayCollection();
+        $f1 = $this->getFriendships();
+        $f2 = $this->getFriendswithme();
+        foreach ($f1 as $ami1){
+            if ($ami1->getStatus()=="accepted") {
+                $papa->add($ami1->getFriend());
+            }
+        }
 
+        foreach ($f2 as $ami2){
+            if ($ami2->getStatus()=="accepted") {
+                $papa->add($ami2->getFriend());
+            }
+        }
+        return $papa;
+    }
+
+    /**
+     * @return Collection|User[]
+     */
+    public function getPending(){
+        $papa = new ArrayCollection();
+        $f1 = $this->getFriendships();
+        $f2 = $this->getFriendswithme();
+        foreach ($f1 as $ami1){
+            if ($ami1->getStatus()=="pending") {
+                $papa->add($ami1->getFriend());
+            }
+        }
+
+        foreach ($f2 as $ami2){
+            if ($ami2->getStatus()=="pending") {
+                $papa->add($ami2->getFriend());
+            }
+        }
+        return $papa;
+    }
     /**
      * @return Collection|Group[]
      */

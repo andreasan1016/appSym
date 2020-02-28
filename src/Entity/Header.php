@@ -23,7 +23,7 @@ class Header
     private $user_to;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Message")
+     * @ORM\ManyToOne(targetEntity="App\Entity\Message",cascade={"persist"})
      * @ORM\JoinColumn(nullable=false)
      */
     private $message;

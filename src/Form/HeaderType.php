@@ -2,8 +2,10 @@
 
 namespace App\Form;
 
+use App\Entity\User;
 use App\Entity\Header;
 use App\Repository\UserRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -14,13 +16,13 @@ class HeaderType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('old')
-           /* ->add("user_to", ChoiceType::class,[
-                'choices'=>[
-                    'user1' => 'user1',
-                ],
-            ])*/
-            //->add('message', null)
+            ->add("user_to", EntityType::class, [
+                'class'=>User::class,
+                'choices'=>$builder->getData()->getMessage()->getUserFrom()->getAllFriends(),
+                'choice_label' => 'username',
+                'multiple'=>false,
+                'mapped'=>true,
+            ])
         ;
     }
 

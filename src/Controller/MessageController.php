@@ -35,16 +35,24 @@ class MessageController extends AbstractController
         $header = new Header();
         $message = new Message();
         $message->setUserFrom($this->getUser());
+        $header->setMessage($message);
+        $header->setOld(false);
         $form = $this->createForm(MessageType::class, $message);
         $form2 = $this->createForm(HeaderType::class, $header);
+        $form2->handleRequest($request);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $message->setSentWhen(new \DateTime());
+            $ahora = new \DateTime();
+            $message->setSentWhen($ahora);
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($message);
             $entityManager->flush();
-
+        }
+        if ($form2->isSubmitted() && $form2->isValid()) {
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($header);
+            $entityManager->flush();
             return $this->redirectToRoute('message_index');
         }
 
