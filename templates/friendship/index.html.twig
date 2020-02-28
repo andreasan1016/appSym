@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Friendship index{% endblock %}
+
+{% block body %}
+    <h1>Friendship index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Status</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for friendship in friendships %}
+            <tr>
+                <td>{{ friendship.id }}</td>
+                <td>{{ friendship.status }}</td>
+                <td>
+                    <a href="{{ path('friendship_show', {'id': friendship.id}) }}">show</a>
+                    <a href="{{ path('friendship_edit', {'id': friendship.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('friendship_new') }}">Create new</a>
+{% endblock %}
